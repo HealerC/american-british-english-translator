@@ -60,13 +60,44 @@ class Translator {
           americanToBritishSpelling
         );
         for (let eachWord in allAmerican) {
-          let regex = new RegExp(eachWord, "igm");
-          newText = newText.replace(regex, allAmerican[eachWord]); // replaceAll() doesn't work
+          let regex = new RegExp(`(?<!\\S)${eachWord}(?=\\s|[.])`, "igm");
+          newText = newText.replace(
+            regex,
+            `<span class="highlight">${allAmerican[eachWord]}</span>`
+          ); // replaceAll() doesn't work
         }
         break;
       case BR_AM:
-
+        /* First handle reverse translation of british
+        to american spellings and titles  */
+        const amBrWords = Object.assign(
+          {},
+          americanToBritishSpelling,
+          americanToBritishTitles
+        );
+        const amKeys = Object.keys(amBrWords);
+        amKeys.forEach((word) => {
+          let brWord = amBrWords[word];
+          let regex = new RegExp(`(?<!\\S)${brWord}(?=\\s|[.])`, "igm");
+          if (americanToBritishTitles[word]) {
+            word = word.charAt(0).toUpperCase() + word.substring(1);
+          }
+          newText = newText.replace(
+            regex,
+            `<span class="highlight">${word}</span>`
+          );
+        });
+        /* Then handle words that are exclusively british */
+        for (let eachWord in britishOnly) {
+          let regex = new RegExp(`(?<!\\S)${eachWord}(?=\\s|[.])`, "igm");
+          newText = newText.replace(
+            regex,
+            `<span class="highlight">${britishOnly[eachWord]}</span>`
+          );
+        }
+        break;
       default:
+        return;
     }
     return newText;
   }
