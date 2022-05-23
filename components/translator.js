@@ -9,34 +9,25 @@ const BR_AM = "british-to-american";
 class Translator {
   /* Initialize the regexp that will be used to replace words*/
   constructor() {
-    this.re = /\d{1,2}[:|.]\d{2}|[A-Za-z]+[.]|\b[A-Za-z]+\b|\n/gm;
+    this.re = /\d{1,2}[:|.]\d{2}|[A-Za-z]+[.]|\n/gm;
+    // Matching just the date, text with dot (e.g. title) and line feed
   }
 
-  /* Handles dates and titles translation but passes dictionary
-  search translation to the other functions */
   translate(text, locale) {
-    let isTranslated = false; // Set to true if translation is done
-
-    const newText = text.replace(this.re, (match) => {
+    let newText = text.replace(this.re, (match) => {
       if (match === "\n") {
-        return "<br />"; // New lines should be handled correctly
+        return "<br />";
       } else if (/[A-Za-z]+[.]/.test(match)) {
         // titles
         if (locale === AM_BR) {
           if (americanToBritishTitles[match.toLowerCase()]) {
-            isTranslated = true;
             let result = americanToBritishTitles[match.toLowerCase()];
             result = result[0].toUpperCase() + result.substring(1);
             return result;
           }
         }
-        let result = this.searcher(match, locale);
-        if (!result) return match;
-        else {
-          isTranslated = true;
-          return result;
-        }
-      } else if (/\d{1,2}[:|.]\d{2}/.test(match)) {
+        return match;
+      } else {
         // dates
         const hhre = /\d{1,2}(?=[.]|:)/;
         const mmre = /(?<=[.]|:)\d{2}/;
@@ -50,38 +41,34 @@ class Translator {
         }
         if (locale === AM_BR) {
           if (match.indexOf(":") >= 0) {
-            isTranslated = true;
             return match.replace(":", ".");
           }
         } else if (locale === BR_AM) {
           if (match.indexOf(".") >= 0) {
-            isTranslated = true;
             return match.replace(".", ":");
           }
-        } // End dates
-      } else {
-        let result = this.searcher(match, locale);
-        if (!result) return match;
-        else {
-          isTranslated = true;
-          return result;
         }
-      }
-    });
-    return newText;
-  }
-  searcher(word, locale) {
-    let translatedWord = "";
+        return match;
+      } // End dates
+    }); // End date-linefeed replace
+
     switch (locale) {
       case AM_BR:
-        translatedWord =
-          americanOnly[word] || americanToBritishSpelling[word] || "";
+        const allAmerican = Object.assign(
+          {},
+          americanOnly,
+          americanToBritishSpelling
+        );
+        for (let eachWord in allAmerican) {
+          let regex = new RegExp(eachWord, "igm");
+          newText = newText.replace(regex, allAmerican[eachWord]); // replaceAll() doesn't work
+        }
         break;
       case BR_AM:
 
       default:
-        return "";
     }
+    return newText;
   }
 }
 
