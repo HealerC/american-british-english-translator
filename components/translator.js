@@ -23,7 +23,7 @@ class Translator {
           if (americanToBritishTitles[match.toLowerCase()]) {
             let result = americanToBritishTitles[match.toLowerCase()];
             result = result[0].toUpperCase() + result.substring(1);
-            return result;
+            return `<span class="highlight">${result}</span>`;
           }
         }
         return match;
@@ -41,11 +41,11 @@ class Translator {
         }
         if (locale === AM_BR) {
           if (match.indexOf(":") >= 0) {
-            return match.replace(":", ".");
+            return `<span class="highlight">${match.replace(":", ".")}</span>`;
           }
         } else if (locale === BR_AM) {
           if (match.indexOf(".") >= 0) {
-            return match.replace(".", ":");
+            return `<span class="highlight">${match.replace(".", ":")}</span>`;
           }
         }
         return match;
@@ -97,9 +97,8 @@ class Translator {
         }
         break;
       default:
-        return;
-    }
-    return newText;
+    } // End switch
+    return text === newText ? "Everything looks good to me!" : newText;
   }
 }
 
