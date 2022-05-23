@@ -71,7 +71,17 @@ class Translator {
     return newText;
   }
   searcher(word, locale) {
-    return word;
+    let translatedWord = "";
+    switch (locale) {
+      case AM_BR:
+        translatedWord =
+          americanOnly[word] || americanToBritishSpelling[word] || "";
+        break;
+      case BR_AM:
+
+      default:
+        return "";
+    }
   }
 }
 
