@@ -13,6 +13,7 @@ const translate = (req, res) => {
   if (VALID_LOCALES.indexOf(locale) < 0) {
     throw new Error("Invalid value for locale field");
   }
+
   const translation = translator.translate(text, locale);
   res.json({ text, translation });
 };

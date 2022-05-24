@@ -13,24 +13,32 @@ class Translator {
     // Matching just the date, text with dot (e.g. title) and line feed
   }
 
+  /* First do a replace matching the regex initialized in the constructor
+  then start translating the words between American and British English
+  still using regex though with each word taking the Regexp */
   translate(text, locale) {
+    /* Handle American to British translation of titles (e.g. Mr. -> Mr)
+    Handle both translation of dates
+    Add a <br /> for every \n so result is consistent with request text */
     let newText = text.replace(this.re, (match) => {
       if (match === "\n") {
         return "<br />";
       } else if (/[A-Za-z]+[.]/.test(match)) {
         // titles
+        // For BR_AM titles, the total word translation will handle that
         if (locale === AM_BR) {
           if (americanToBritishTitles[match.toLowerCase()]) {
             let result = americanToBritishTitles[match.toLowerCase()];
-            result = result[0].toUpperCase() + result.substring(1);
+            result = result[0].toUpperCase() + result.substring(1); // capitalize
             return `<span class="highlight">${result}</span>`;
           }
         }
-        return match;
+        return match; // Not a title bro
       } else {
-        // dates
-        const hhre = /\d{1,2}(?=[.]|:)/;
-        const mmre = /(?<=[.]|:)\d{2}/;
+        /* It verifies they match a time text as well as 
+        they are correct times (invalidates 24:10, 99:83) */
+        const hhre = /\d{1,2}(?=[.]|:)/; // hour
+        const mmre = /(?<=[.]|:)\d{2}/; // minute
         let hh = Number(match.match(hhre)[0]);
         let mm = Number(match.match(mmre)[0]);
         if (!(hh >= 0 && hh <= 23)) {
@@ -49,9 +57,10 @@ class Translator {
           }
         }
         return match;
-      } // End dates
-    }); // End date-linefeed replace
+      } // End time
+    }); // End time-linefeed replace
 
+    /* Match and replace words in the sentence */
     switch (locale) {
       case AM_BR:
         const allAmerican = Object.assign(
@@ -64,7 +73,7 @@ class Translator {
           newText = newText.replace(
             regex,
             `<span class="highlight">${allAmerican[eachWord]}</span>`
-          ); // replaceAll() doesn't work
+          ); // replaceAll() doesn't work for weird reasons
         }
         break;
       case BR_AM:
@@ -73,13 +82,15 @@ class Translator {
         const amBrWords = Object.assign(
           {},
           americanToBritishSpelling,
-          americanToBritishTitles
+          americanToBritishTitles // Here we handle Br -> Am titles
         );
+
         const amKeys = Object.keys(amBrWords);
         amKeys.forEach((word) => {
-          let brWord = amBrWords[word];
+          let brWord = amBrWords[word]; // Replace british word
           let regex = new RegExp(`(?<!\\S)${brWord}(?=\\s|[.])`, "igm");
           if (americanToBritishTitles[word]) {
+            // capitalize
             word = word.charAt(0).toUpperCase() + word.substring(1);
           }
           newText = newText.replace(
@@ -87,7 +98,9 @@ class Translator {
             `<span class="highlight">${word}</span>`
           );
         });
-        /* Then handle words that are exclusively british */
+
+        /* Then handle words that are exclusively british (similar
+          to case AM_BR above) */
         for (let eachWord in britishOnly) {
           let regex = new RegExp(`(?<!\\S)${eachWord}(?=\\s|[.])`, "igm");
           newText = newText.replace(
